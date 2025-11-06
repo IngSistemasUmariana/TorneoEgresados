@@ -1,26 +1,17 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 /* =========================================================
-   🔹 Configuración SMTP (Gmail)
+   🔹 Inicialización de Resend (API HTTPS)
 ========================================================= */
-export const transporter = nodemailer.createTransport({
-  service: "gmail",
-  pool: true,
-  maxConnections: 5,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: { rejectUnauthorized: false },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 (async () => {
   try {
-    await transporter.verify();
-    console.log("📮 Gmail listo como:", process.env.EMAIL_USER);
+    if (!process.env.RESEND_API_KEY) throw new Error("Falta RESEND_API_KEY");
+    console.log("📮 Resend listo con remitente:", process.env.MAIL_FROM_ADDR);
   } catch (err) {
     console.error("❌ Verificación fallida:", err.message);
   }
@@ -70,7 +61,6 @@ const baseTemplate = (title, content, heroUrl) => `
     width: 100%;
     height: 200px;
     object-fit: cover;
-    display: block;
   }
   .header-title {
     text-align: center;
@@ -80,17 +70,9 @@ const baseTemplate = (title, content, heroUrl) => `
     font-size: 1.8rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 1px;
   }
-  .body {
-    padding: 36px 32px;
-  }
-  .body h2 {
-    color: #004AAD;
-    margin-top: 0;
-    text-align: center;
-    font-weight: 700;
-  }
+  .body { padding: 36px 32px; }
+  .body h2 { color: #004AAD; text-align: center; font-weight: 700; }
   .highlight { color: #0074E4; font-weight: 700; }
   .card {
     background: #f1f5f9;
@@ -99,17 +81,8 @@ const baseTemplate = (title, content, heroUrl) => `
     margin: 20px 0;
     border-left: 4px solid #0074E4;
   }
-  .card p {
-    margin: 0.4rem 0;
-    display: flex;
-    align-items: center;
-  }
-  .card img.icon {
-    width: 26px;
-    height: 26px;
-    margin-right: 10px;
-    vertical-align: middle;
-  }
+  .card p { margin: 0.4rem 0; display: flex; align-items: center; }
+  .card img.icon { width: 26px; height: 26px; margin-right: 10px; }
   .btn {
     display: inline-block;
     background: #004AAD;
@@ -131,7 +104,7 @@ const baseTemplate = (title, content, heroUrl) => `
   .footer img {
     width: 120px;
     display: block;
-    margin: 0 auto 10px auto;
+    margin: 0 auto 10px;
   }
 </style>
 </head>
@@ -143,7 +116,7 @@ const baseTemplate = (title, content, heroUrl) => `
     <div class="header-title">Egresado Leyendas ⚡</div>
     <div class="body">${content}</div>
     <div class="footer">
-      <img src="hhttps://www.umariana.edu.co/images2022/portada/Logo-Universidad-Mariana.png" alt="Universidad Mariana" />
+      <img src="https://www.umariana.edu.co/images2022/portada/Logo-Universidad-Mariana.png" alt="Universidad Mariana" />
       © ${new Date().getFullYear()} Universidad Mariana · Liga de Egresados
     </div>
   </div>
@@ -215,22 +188,23 @@ export const newPlayerTemplate = (team, player, sport) => baseTemplate(
 );
 
 /* =========================================================
-   🔹 Envío de correo
+   🔹 Envío de correo (Resend + dominio temporal)
 ========================================================= */
 export const sendMail = async (to, subject, html) => {
   const fromName = process.env.MAIL_FROM_NAME || "Egresado Leyendas ⚡";
-  const fromAddr = process.env.MAIL_FROM_ADDR || process.env.EMAIL_USER;
+  const fromAddr = process.env.MAIL_FROM_ADDR || "egresados@resend.dev";
 
   try {
-    const info = await transporter.sendMail({
+    const { data, error } = await resend.emails.send({
       from: `${fromName} <${fromAddr}>`,
       to,
       subject,
       html,
     });
-    console.log("✅ Correo ENVIADO vía Gmail");
-    console.log("   → ID:", info.messageId);
-    return info;
+
+    if (error) throw new Error(error.message);
+    console.log("✅ Correo ENVIADO vía Resend:", data.id);
+    return data;
   } catch (err) {
     console.error("❌ Error al ENVIAR correo:", err.message);
     throw err;
