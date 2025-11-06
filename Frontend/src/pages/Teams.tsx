@@ -20,8 +20,8 @@ export const Teams = () => {
   const fetchData = async () => {
     try {
       const [teamsRes, sportsRes] = await Promise.all([
-        fetch("http://localhost:4000/api/teams", { cache: "no-store" }),
-        fetch("http://localhost:4000/api/sports", { cache: "no-store" }),
+        fetch("https://torneoegresados.onrender.com/api/teams", { cache: "no-store" }),
+        fetch("https://torneoegresados.onrender.com/api/sports", { cache: "no-store" }),
       ]);
 
       if (!teamsRes.ok || !sportsRes.ok) throw new Error("Error al cargar datos");
