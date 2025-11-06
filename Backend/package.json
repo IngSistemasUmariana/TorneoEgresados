@@ -1,0 +1,25 @@
+{
+  "name": "sports-backend",
+  "version": "1.1.0",
+  "description": "Sports API with Teams/Sports CRUD, Gmail Nodemailer, Auto-Enroll, Swagger docs",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.3.0",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.9.9",
+    "resend": "^6.4.1",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

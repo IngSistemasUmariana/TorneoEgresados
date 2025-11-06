@@ -1,0 +1,238 @@
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+/* =========================================================
+   🔹 Configuración SMTP (Gmail)
+========================================================= */
+export const transporter = nodemailer.createTransport({
+  service: "gmail",
+  pool: true,
+  maxConnections: 5,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: { rejectUnauthorized: false },
+});
+
+(async () => {
+  try {
+    await transporter.verify();
+    console.log("📮 Gmail listo como:", process.env.EMAIL_USER);
+  } catch (err) {
+    console.error("❌ Verificación fallida:", err.message);
+  }
+})();
+
+/* =========================================================
+   🔹 Selector de imagen hero por deporte
+========================================================= */
+const getHeroImage = (sportName = "") => {
+  const s = sportName.toLowerCase();
+  if (s.includes("fútbol") || s.includes("microfútbol"))
+    return "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=900&q=80";
+  if (s.includes("baloncesto") || s.includes("basket"))
+    return "https://images.unsplash.com/photo-1603786794183-4f98f25b37a8?auto=format&fit=crop&w=900&q=80";
+  if (s.includes("voleibol") || s.includes("voley"))
+    return "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=900&q=80";
+  return "https://images.unsplash.com/photo-1591115765373-5207764f74d6?auto=format&fit=crop&w=900&q=80";
+};
+
+/* =========================================================
+   🔹 Plantilla base HTML con footer institucional
+========================================================= */
+const baseTemplate = (title, content, heroUrl) => `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>${title}</title>
+<style>
+  body {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: #eaf1fb;
+    margin: 0;
+    padding: 0;
+    color: #1e293b;
+  }
+  .container {
+    max-width: 720px;
+    margin: 30px auto;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  .header img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+  }
+  .header-title {
+    text-align: center;
+    background: linear-gradient(90deg, #004AAD, #0074E4);
+    color: white;
+    padding: 18px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .body {
+    padding: 36px 32px;
+  }
+  .body h2 {
+    color: #004AAD;
+    margin-top: 0;
+    text-align: center;
+    font-weight: 700;
+  }
+  .highlight { color: #0074E4; font-weight: 700; }
+  .card {
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 4px solid #0074E4;
+  }
+  .card p {
+    margin: 0.4rem 0;
+    display: flex;
+    align-items: center;
+  }
+  .card img.icon {
+    width: 26px;
+    height: 26px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  .btn {
+    display: inline-block;
+    background: #004AAD;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  .btn:hover { background: #0074E4; }
+  .footer {
+    background: #004AAD;
+    color: #fff;
+    text-align: center;
+    padding: 25px 20px;
+    font-size: 0.9rem;
+  }
+  .footer img {
+    width: 120px;
+    display: block;
+    margin: 0 auto 10px auto;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="${heroUrl}" alt="Deporte en acción" />
+    </div>
+    <div class="header-title">Egresado Leyendas ⚡</div>
+    <div class="body">${content}</div>
+    <div class="footer">
+      <img src="hhttps://www.umariana.edu.co/images2022/portada/Logo-Universidad-Mariana.png" alt="Universidad Mariana" />
+      © ${new Date().getFullYear()} Universidad Mariana · Liga de Egresados
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+/* =========================================================
+   🔹 Plantillas
+========================================================= */
+export const teamRegisteredTemplate = (team, sport) => baseTemplate(
+  "Registro de Equipo Exitoso",
+  `
+  <h2>¡Tu equipo ha sido registrado con éxito!</h2>
+  <p>Hola <span class="highlight">${team.captainName}</span>, tu equipo <b>${team.teamName}</b> ha quedado inscrito en <b>${sport.name}</b>.</p>
+
+  <div class="card">
+    <p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png"> <b>Capitán:</b> ${team.captainName}</p>
+    <p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/681/681494.png"> <b>Cédula:</b> ${team.captainId}</p>
+    <p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/724/724664.png"> <b>Teléfono:</b> ${team.phone}</p>
+    <p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/646/646094.png"> <b>Correo:</b> ${team.email}</p>
+  </div>
+
+  <h3 style="color:#004AAD;">Jugadores:</h3>
+  <div class="card">
+    ${
+      team.players?.length
+        ? team.players
+            .map(
+              (p) =>
+                `<p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/1077/1077012.png"> ${p.name} — <i>${p.program || "Programa no especificado"}</i></p>`
+            )
+            .join("")
+        : "<p>Aún no hay jugadores adicionales registrados.</p>"
+    }
+  </div>
+
+  <div style="text-align:center;">
+    <a class="btn" href="#">Ver reglamento del torneo</a>
+  </div>
+  `,
+  getHeroImage(sport.name)
+);
+
+export const newPlayerTemplate = (team, player, sport) => baseTemplate(
+  "Nuevo Jugador Registrado",
+  `
+  <h2>¡Nuevo integrante confirmado!</h2>
+  <p>El jugador <span class="highlight">${player.name}</span> (${player.program}) se ha unido a <b>${team.teamName}</b> en <b>${sport.name}</b>.</p>
+
+  <div class="card">
+    <p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/1077/1077012.png"> <b>Nombre:</b> ${player.name}</p>
+    <p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/471/471664.png"> <b>Cédula:</b> ${player.idNumber}</p>
+    <p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/201/201818.png"> <b>Programa:</b> ${player.program}</p>
+    ${
+      player.email
+        ? `<p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/646/646094.png"> <b>Correo:</b> ${player.email}</p>`
+        : ""
+    }
+  </div>
+
+  <p>El equipo ahora cuenta con <b>${team.players.length}</b> jugadores activos.</p>
+
+  <div style="text-align:center;">
+    <a class="btn" href="#">Ver listado completo</a>
+  </div>
+  `,
+  getHeroImage(sport.name)
+);
+
+/* =========================================================
+   🔹 Envío de correo
+========================================================= */
+export const sendMail = async (to, subject, html) => {
+  const fromName = process.env.MAIL_FROM_NAME || "Egresado Leyendas ⚡";
+  const fromAddr = process.env.MAIL_FROM_ADDR || process.env.EMAIL_USER;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `${fromName} <${fromAddr}>`,
+      to,
+      subject,
+      html,
+    });
+    console.log("✅ Correo ENVIADO vía Gmail");
+    console.log("   → ID:", info.messageId);
+    return info;
+  } catch (err) {
+    console.error("❌ Error al ENVIAR correo:", err.message);
+    throw err;
+  }
+};
