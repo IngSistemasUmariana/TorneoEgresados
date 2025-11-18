@@ -3,6 +3,7 @@ import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { Register } from './pages/RegisterPage';
 import { Teams } from './pages/Teams';
+import { Soporte } from './pages/Soporte'; // <-- IMPORTANTE
 
 function AppContent() {
   const { currentPage } = useNavigation();
@@ -14,6 +15,7 @@ function AppContent() {
         {currentPage === 'home' && <Home />}
         {currentPage === 'register' && <Register />}
         {currentPage === 'teams' && <Teams />}
+        {currentPage === 'soporte' && <Soporte />} {/* <-- NUEVA PÁGINA */}
       </div>
     </>
   );

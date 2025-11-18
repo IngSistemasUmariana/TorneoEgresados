@@ -191,7 +191,7 @@ export const AutoEnrollModal = ({ sports, onClose }) => {
             }
             required
           >
-            <option value="">Selecciona nivel académico</option>
+            <option value="">Que programa egresaste ?</option>
             <option value="pregrado">Pregrado</option>
             <option value="posgrado">Posgrado</option>
           </select>

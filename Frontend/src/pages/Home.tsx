@@ -63,7 +63,7 @@ export const Home: React.FC = () => {
     },
     {
       name: "Ping Pong",
-      description: "Equipos de 2 jugadores",
+      description: "Equipos de 1 jugador",
       image:
         "https://static.wixstatic.com/media/d9a908_9788d245789c4c4b92b72651bf14f704~mv2.jpg/v1/fill/w_752,h_502,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/d9a908_9788d245789c4c4b92b72651bf14f704~mv2.jpg",
     },

@@ -1,4 +1,3 @@
-// src/modules/register/Register.tsx
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
@@ -13,6 +12,7 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import confetti from "canvas-confetti";
 import "react-toastify/dist/ReactToastify.css";
+
 import { StepContainer } from "../components/register/StepContainer";
 import { StepDeporte } from "../components/register/StepDeporte";
 import { StepEquipo } from "../components/register/StepEquipo";
@@ -25,13 +25,13 @@ export const Register = () => {
   const [loading, setLoading] = useState(false);
   const [sports, setSports] = useState<any[]>([]);
 
-  // Estructura final
   const [formData, setFormData] = useState({
     sport: "",
     sportName: "",
     teamName: "",
     captainName: "",
     captainId: "",
+    captainProgram: "",
     phone: "",
     email: "",
     players: [] as {
@@ -43,7 +43,7 @@ export const Register = () => {
   });
 
   /* =========================================================
-     🔹 Obtener lista de deportes desde la API
+     Cargar deportes
   ========================================================= */
   useEffect(() => {
     const fetchSports = async () => {
@@ -52,7 +52,6 @@ export const Register = () => {
         const data = await res.json();
         setSports(data);
       } catch (err) {
-        console.error("Error al obtener deportes:", err);
         toast.error("No se pudieron cargar los deportes");
       }
     };
@@ -60,7 +59,7 @@ export const Register = () => {
   }, []);
 
   /* =========================================================
-     🔹 Reglas locales de jugadores por deporte
+     Límites dinámicos
   ========================================================= */
   const getLimits = (sportName: string) => {
     const name = sportName.toLowerCase();
@@ -74,65 +73,102 @@ export const Register = () => {
   const currentLimits = currentSport ? getLimits(currentSport.name) : { min: 1, max: 10 };
 
   /* =========================================================
-     🔹 Manejo de selección de deporte
+     🔥 1. FIX — PING PONG NO debe generar jugador vacío
   ========================================================= */
   const handleSportChange = (sportId: string) => {
     const selected = sports.find((s) => s._id === sportId);
-    const { min } = getLimits(selected?.name || "");
+    const { min, max } = getLimits(selected?.name || "");
+
     setFormData((prev) => ({
       ...prev,
       sport: sportId,
       sportName: selected?.name || "",
-      players: Array(min)
-        .fill(null)
-        .map(() => ({ name: "", idNumber: "", program: "", email: "" })),
+
+      players:
+        min === 1 && max === 1
+          ? [] // 🔥 NO crear jugador vacío
+          : Array(min)
+              .fill(null)
+              .map(() => ({
+                name: "",
+                idNumber: "",
+                program: "",
+                email: "",
+              })),
     }));
   };
 
   /* =========================================================
-     🔹 Capitán cuenta como jugador
+     🔥 2. FIX — Deporte individual → players = SOLO capitán
   ========================================================= */
   useEffect(() => {
-    if (formData.captainName && formData.captainId) {
-      const captainPlayer = {
-        name: formData.captainName,
-        idNumber: formData.captainId,
-        program: "Capitán",
-        email: formData.email,
-      };
-      const filtered = formData.players.filter((p) => p.program !== "Capitán");
+    const { min, max } = currentLimits;
+
+    if (
+      !formData.captainName ||
+      !formData.captainId ||
+      !formData.captainProgram ||
+      !formData.email
+    ) {
+      return;
+    }
+
+    const captainPlayer = {
+      name: formData.captainName,
+      idNumber: formData.captainId,
+      program: formData.captainProgram,
+      email: formData.email,
+    };
+
+    // 🔥 Deporte individual → players = [capitán]
+    if (min === 1 && max === 1) {
       setFormData((prev) => ({
         ...prev,
-        players: [captainPlayer, ...filtered],
+        players: [captainPlayer],
       }));
+      return;
     }
-  }, [formData.captainName, formData.captainId, formData.email]);
+
+    // 🔥 Deporte grupal
+    const others = formData.players.filter(
+      (p) => p.name && p.name !== formData.captainName
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      players: [captainPlayer, ...others],
+    }));
+  }, [
+    formData.captainName,
+    formData.captainId,
+    formData.captainProgram,
+    formData.email,
+    currentLimits.min,
+    currentLimits.max,
+  ]);
 
   /* =========================================================
-     🔹 Manejo de jugadores
+     Manejo de jugadores
   ========================================================= */
-  const handlePlayerChange = (
-    index: number,
-    field: "name" | "idNumber" | "program" | "email",
-    value: string
-  ) => {
+  const handlePlayerChange = (index: number, field: string, value: string) => {
     const updated = [...formData.players];
     updated[index] = { ...updated[index], [field]: value };
-    setFormData({ ...formData, players: updated });
+    setFormData((prev) => ({ ...prev, players: updated }));
   };
 
   const addPlayer = () => {
-    if (formData.players.length < currentLimits.max) {
-      setFormData({
-        ...formData,
-        players: [
-          ...formData.players,
-          { name: "", idNumber: "", program: "", email: "" },
-        ],
-      });
-    } else {
+    if (formData.players.length >= currentLimits.max) {
       toast.info(`Máximo ${currentLimits.max} jugadores permitidos`);
+      return;
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      players: [
+        ...prev.players,
+        { name: "", idNumber: "", program: "", email: "" },
+      ],
+    }));
   };
 
   const removePlayer = (index: number) => {
@@ -140,48 +176,57 @@ export const Register = () => {
       toast.warning(`Debes tener al menos ${currentLimits.min} jugadores registrados`);
       return;
     }
-    setFormData({
-      ...formData,
-      players: formData.players.filter((_, i) => i !== index),
-    });
+
+    setFormData((prev) => ({
+      ...prev,
+      players: prev.players.filter((_, i) => i !== index),
+    }));
   };
 
   /* =========================================================
-     🔹 Enviar a la API
+     Enviar formulario
   ========================================================= */
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://torneoegresados.onrender.com/api/teams", {
+
+      const res = await fetch("https://torneoegresados.onrender.com/api/teams", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      const data = await response.json();
 
-      if (!response.ok) throw new Error(data.message || "Error al registrar el equipo");
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Error al registrar");
 
       toast.success("¡Registro exitoso!");
-      confetti({ particleCount: 220, spread: 90, origin: { y: 0.6 } });
+      confetti({ particleCount: 200, spread: 90 });
+
       setStep(5);
-    } catch (error: any) {
-      toast.error(error.message || "Error al registrar equipo");
-      console.error(error);
+    } catch (err: any) {
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   /* =========================================================
-     🔹 Navegación
+     Navegación
   ========================================================= */
   const nextStep = () => setStep((s) => Math.min(s + 1, 5));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
+
+  const handleNextEquipo = () => {
+    if (currentLimits.min === 1 && currentLimits.max === 1) {
+      setStep(4); // 🔥 Saltar StepJugadores
+    } else {
+      nextStep();
+    }
+  };
+
   const steps = ["Deporte", "Equipo", "Jugadores", "Resumen", "Confirmar"];
 
-  /* =========================================================
-     🔹 Render principal
-  ========================================================= */
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900">
       <ToastContainer position="top-center" autoClose={3000} theme="colored" />
@@ -194,7 +239,10 @@ export const Register = () => {
       />
 
       <div className="relative z-10 w-full max-w-5xl bg-white/95 backdrop-blur-xl shadow-2xl rounded-2xl p-6 sm:p-10 border border-white/20">
-        {/* ===== Barra de pasos ===== */}
+        
+        {/* =======================
+            Barra de pasos
+        ======================= */}
         <div className="flex justify-between items-center mb-8 sm:mb-10 relative">
           {steps.map((label, i) => (
             <div key={i} className="flex-1 flex flex-col items-center relative">
@@ -205,8 +253,9 @@ export const Register = () => {
                   }`}
                 />
               )}
+
               <div
-                className={`z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full border-2 text-xs sm:text-sm font-semibold transition-all duration-300 ${
+                className={`z-10 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full border-2 text-xs sm:text-sm font-semibold ${
                   step > i + 1
                     ? "bg-blue-600 border-blue-600 text-white"
                     : step === i + 1
@@ -216,6 +265,7 @@ export const Register = () => {
               >
                 {step > i + 1 ? "✓" : i + 1}
               </div>
+
               <p
                 className={`mt-2 text-[10px] sm:text-xs ${
                   step >= i + 1 ? "text-blue-700 font-semibold" : "text-gray-500"
@@ -227,7 +277,9 @@ export const Register = () => {
           ))}
         </div>
 
-        {/* ===== Contenido dinámico ===== */}
+        {/* =======================
+            CONTENIDO
+        ======================= */}
         <AnimatePresence mode="wait">
           {step === 1 && (
             <StepContainer key="step1">
@@ -258,6 +310,7 @@ export const Register = () => {
                   name: formData.teamName,
                   captain: formData.captainName,
                   captainCedula: formData.captainId,
+                  captainProgram: formData.captainProgram,
                   phone: formData.phone,
                   email: formData.email,
                 }}
@@ -268,14 +321,17 @@ export const Register = () => {
                         name: prev.teamName,
                         captain: prev.captainName,
                         captainCedula: prev.captainId,
+                        captainProgram: prev.captainProgram,
                         phone: prev.phone,
                         email: prev.email,
                       });
+
                       return {
                         ...prev,
                         teamName: updated.name,
                         captainName: updated.captain,
                         captainId: updated.captainCedula,
+                        captainProgram: updated.captainProgram,
                         phone: updated.phone,
                         email: updated.email,
                       };
@@ -286,13 +342,14 @@ export const Register = () => {
                       teamName: updater.name ?? prev.teamName,
                       captainName: updater.captain ?? prev.captainName,
                       captainId: updater.captainCedula ?? prev.captainId,
+                      captainProgram: updater.captainProgram ?? prev.captainProgram,
                       phone: updater.phone ?? prev.phone,
                       email: updater.email ?? prev.email,
                     }));
                   }
                 }}
                 prevStep={prevStep}
-                nextStep={nextStep}
+                nextStep={handleNextEquipo}
                 icons={{
                   team: <Users className="w-5 h-5 text-gray-400" />,
                   captain: <UserPlus className="w-5 h-5 text-gray-400" />,
@@ -317,7 +374,11 @@ export const Register = () => {
                 handlePlayerChange={(i, field, v) =>
                   handlePlayerChange(
                     i,
-                    field === "cedula" ? "idNumber" : field === "egresado" ? "program" : field,
+                    field === "cedula"
+                      ? "idNumber"
+                      : field === "egresado"
+                      ? "program"
+                      : field,
                     v
                   )
                 }
@@ -338,6 +399,7 @@ export const Register = () => {
                   sport: formData.sportName,
                   captain: formData.captainName,
                   captainCedula: formData.captainId,
+                  captainProgram: formData.captainProgram,
                   phone: formData.phone,
                   email: formData.email,
                   players: formData.players.map((p) => ({

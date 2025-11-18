@@ -94,9 +94,6 @@ const baseTemplate = (title, content, heroUrl) => `
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <img src="${heroUrl}" alt="Deporte en acción" />
-    </div>
     <div class="header-title">Egresado Leyendas ⚡</div>
     <div class="body">${content}</div>
     <div class="footer">

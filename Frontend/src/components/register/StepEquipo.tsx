@@ -1,14 +1,15 @@
 // src/modules/register/components/StepEquipo.tsx
 import { Dispatch, ReactNode, SetStateAction } from "react";
 import { motion } from "framer-motion";
-import { NavButtons } from "./NavButtons";
-import { InputField } from "./InputField";
+import { ProgramSelector } from "./ProgramSelector";
+import { toast } from "react-toastify";
 
 interface Props {
   formData: {
     name: string;
     captain: string;
     captainCedula: string;
+    captainProgram: string;
     phone: string;
     email: string;
   };
@@ -30,129 +31,154 @@ export const StepEquipo: React.FC<Props> = ({
   prevStep,
   nextStep,
   icons,
-}) => (
-  <div className="p-6">
-    {/* Encabezado */}
-    <div className="mb-6">
-      <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-        Información del Equipo
-      </h2>
-      <p className="text-gray-600 text-sm">
-        Ingresa los datos del equipo y del capitán. Asegúrate de que la
-        información sea correcta.
-      </p>
-    </div>
+}) => {
+  const validar = () => {
+    if (!formData.name.trim()) {
+      toast.error("Debes ingresar el nombre del equipo");
+      return;
+    }
+    if (!formData.captain.trim()) {
+      toast.error("Debes ingresar el nombre del capitán");
+      return;
+    }
+    if (!formData.captainCedula.trim()) {
+      toast.error("Debes ingresar la cédula del capitán");
+      return;
+    }
+    if (!formData.phone.trim()) {
+      toast.error("Debes ingresar el teléfono");
+      return;
+    }
+    if (!formData.captainProgram.trim()) {
+      toast.error("Debes seleccionar el programa del capitán");
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast.error("Debes ingresar el correo electrónico");
+      return;
+    }
 
-    {/* Formulario */}
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 bg-white border border-gray-200 rounded-2xl shadow-sm p-6"
-    >
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          {icons.team}
-          Nombre del Equipo
-        </label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) =>
-            setFormData((p: any) => ({ ...p, name: e.target.value }))
-          }
-          placeholder="Ej: Los Titanes"
-          className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-        />
+    nextStep(); // deja seguir si todo está lleno ✔
+  };
+
+  return (
+    <div className="p-4 sm:p-6">
+      <div className="mb-5">
+        <h2 className="text-xl font-bold text-gray-800">Información del Equipo</h2>
+        <p className="text-gray-600 text-sm">
+          Ingresa los datos del equipo y del capitán.
+        </p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          {icons.captain}
-          Nombre del Capitán
-        </label>
-        <input
-          type="text"
-          value={formData.captain}
-          onChange={(e) =>
-            setFormData((p: any) => ({ ...p, captain: e.target.value }))
-          }
-          placeholder="Nombre completo"
-          className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          {icons.id}
-          Cédula del Capitán
-        </label>
-        <input
-          type="text"
-          value={formData.captainCedula}
-          onChange={(e) =>
-            setFormData((p: any) => ({
-              ...p,
-              captainCedula: e.target.value,
-            }))
-          }
-          placeholder="Ej: 1234567890"
-          className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          {icons.phone}
-          Teléfono
-        </label>
-        <input
-          type="text"
-          value={formData.phone}
-          onChange={(e) =>
-            setFormData((p: any) => ({ ...p, phone: e.target.value }))
-          }
-          placeholder="Ej: 3001234567"
-          className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2 md:col-span-2">
-        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-          {icons.mail}
-          Correo Electrónico
-        </label>
-        <input
-          type="email"
-          value={formData.email}
-          onChange={(e) =>
-            setFormData((p: any) => ({ ...p, email: e.target.value }))
-          }
-          placeholder="correo@ejemplo.com"
-          className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-        />
-      </div>
-    </motion.div>
-
-    {/* Botones de navegación */}
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mt-8">
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={prevStep}
-        className="w-full sm:w-auto px-6 py-2.5 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-all"
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-white border border-gray-200 rounded-xl shadow-sm p-4 sm:p-5"
       >
-        ← Atrás
-      </motion.button>
+        {/* Nombre Equipo */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            {icons.team} Nombre del Equipo
+          </label>
+          <input
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="Ej: Los Titanes"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((p: any) => ({ ...p, name: e.target.value }))
+            }
+          />
+        </div>
 
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={nextStep}
-        className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white font-semibold rounded-lg shadow hover:bg-blue-700 transition-all"
-      >
-        Siguiente →
-      </motion.button>
+        {/* Capitán */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            {icons.captain} Nombre del Capitán
+          </label>
+          <input
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="Nombre completo"
+            value={formData.captain}
+            onChange={(e) =>
+              setFormData((p: any) => ({ ...p, captain: e.target.value }))
+            }
+          />
+        </div>
+
+        {/* Cedula */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            {icons.id} Cédula del Capitán
+          </label>
+          <input
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="1234567890"
+            value={formData.captainCedula}
+            onChange={(e) =>
+              setFormData((p: any) => ({ ...p, captainCedula: e.target.value }))
+            }
+          />
+        </div>
+
+        {/* Teléfono */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            {icons.phone} Teléfono
+          </label>
+          <input
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="3001234567"
+            value={formData.phone}
+            onChange={(e) =>
+              setFormData((p: any) => ({ ...p, phone: e.target.value }))
+            }
+          />
+        </div>
+
+        {/* Selector Programa */}
+        <div className="md:col-span-2 flex flex-col gap-1">
+          <ProgramSelector
+            label="Programa del cual egresó (Capitán)"
+            value={formData.captainProgram}
+            onChange={(program) =>
+              setFormData((p: any) => ({ ...p, captainProgram: program }))
+            }
+          />
+        </div>
+
+        {/* Correo */}
+        <div className="md:col-span-2 flex flex-col gap-1">
+          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+            {icons.mail} Correo Electrónico
+          </label>
+          <input
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            placeholder="correo@ejemplo.com"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData((p: any) => ({ ...p, email: e.target.value }))
+            }
+          />
+        </div>
+      </motion.div>
+
+      {/* Botones */}
+      <div className="flex justify-between mt-6">
+        <button
+          onClick={prevStep}
+          className="px-5 py-2 bg-gray-200 rounded-lg font-semibold hover:bg-gray-300"
+        >
+          ← Atrás
+        </button>
+
+        <button
+          onClick={validar}
+          className="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+        >
+          Siguiente →
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
