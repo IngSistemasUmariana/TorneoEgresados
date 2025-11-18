@@ -1,24 +1,5 @@
 import dotenv from "dotenv";
-import FormData from "form-data";
-import Mailgun from "mailgun.js";
-
 dotenv.config();
-
-/* =========================================================
-   🔹 Inicialización Mailgun
-========================================================= */
-const mailgun = new Mailgun(FormData);
-const mg = mailgun.client({
-  username: "api",
-  key:
-    process.env.MAILGUN_API_KEY ||
-    "fc49fe4382ae402fbfa737a51890adfb-e80d8b76-b256f9a5",
-  url: "https://api.mailgun.net",
-});
-
-const DOMAIN =
-  process.env.MAILGUN_DOMAIN ||
-  "sandbox8cfe38c3d1784e88927f33499ba77e08.mailgun.org";
 
 /* =========================================================
    🔹 Selector de imagen hero por deporte
@@ -35,7 +16,7 @@ const getHeroImage = (sportName = "") => {
 };
 
 /* =========================================================
-   🔹 Plantilla base
+   🔹 Plantilla base HTML con footer institucional
 ========================================================= */
 const baseTemplate = (title, content, heroUrl) => `
 <!DOCTYPE html>
@@ -60,7 +41,11 @@ const baseTemplate = (title, content, heroUrl) => `
     box-shadow: 0 8px 25px rgba(0,0,0,0.15);
     overflow: hidden;
   }
-  .header img { width: 100%; height: 200px; object-fit: cover; }
+  .header img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
   .header-title {
     text-align: center;
     background: linear-gradient(90deg, #004AAD, #0074E4);
@@ -90,22 +75,32 @@ const baseTemplate = (title, content, heroUrl) => `
     border-radius: 10px;
     text-decoration: none;
     font-weight: 600;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
   }
   .btn:hover { background: #0074E4; }
+  .footer {
+    background: #004AAD;
+    color: #fff;
+    text-align: center;
+    padding: 25px 20px;
+    font-size: 0.9rem;
+  }
+  .footer img {
+    width: 120px;
+    display: block;
+    margin: 0 auto 10px;
+  }
 </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <img src="${heroUrl}" />
+      <img src="${heroUrl}" alt="Deporte en acción" />
     </div>
     <div class="header-title">Egresado Leyendas ⚡</div>
     <div class="body">${content}</div>
-
-    <div class="footer" style="background:#004AAD;color:#fff;text-align:center;padding:25px 20px;">
-      <img src="https://www.umariana.edu.co/images2022/portada/Logo-Universidad-Mariana.png"
-           style="width:120px;margin:0 auto 10px;display:block;">
+    <div class="footer">
+      <img src="https://www.umariana.edu.co/images2022/portada/Logo-Universidad-Mariana.png" alt="Universidad Mariana" />
       © ${new Date().getFullYear()} Universidad Mariana · Liga de Egresados
     </div>
   </div>
@@ -114,7 +109,7 @@ const baseTemplate = (title, content, heroUrl) => `
 `;
 
 /* =========================================================
-   🔹 Plantilla: Registro de Equipo
+   🔹 Plantillas
 ========================================================= */
 export const teamRegisteredTemplate = (team, sport) =>
   baseTemplate(
@@ -137,13 +132,11 @@ export const teamRegisteredTemplate = (team, sport) =>
         ? team.players
             .map(
               (p) =>
-                `<p>
-                  <img class="icon" src="https://cdn-icons-png.flaticon.com/512/1077/1077012.png">
-                  ${p.name} — <i>${p.program || "Programa no especificado"}</i>
-                </p>`
+                `<p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/1077/1077012.png"> ${p.name} — <i>${p.program ||
+                  "Programa no especificado"}</i></p>`
             )
             .join("")
-        : "<p>No hay jugadores adicionales registrados.</p>"
+        : "<p>Aún no hay jugadores adicionales registrados.</p>"
     }
   </div>
 
@@ -154,15 +147,12 @@ export const teamRegisteredTemplate = (team, sport) =>
     getHeroImage(sport.name)
   );
 
-/* =========================================================
-   🔹 Plantilla: Nuevo jugador
-========================================================= */
 export const newPlayerTemplate = (team, player, sport) =>
   baseTemplate(
     "Nuevo Jugador Registrado",
     `
   <h2>¡Nuevo integrante confirmado!</h2>
-  <p>El jugador <span class="highlight">${player.name}</span> (${player.program}) se ha unido al equipo <b>${team.teamName}</b> en <b>${sport.name}</b>.</p>
+  <p>El jugador <span class="highlight">${player.name}</span> (${player.program}) se ha unido a <b>${team.teamName}</b> en <b>${sport.name}</b>.</p>
 
   <div class="card">
     <p><img class="icon" src="https://cdn-icons-png.flaticon.com/512/1077/1077012.png"> <b>Nombre:</b> ${player.name}</p>
@@ -175,7 +165,7 @@ export const newPlayerTemplate = (team, player, sport) =>
     }
   </div>
 
-  <p>El equipo ahora tiene <b>${team.players.length}</b> jugadores registrados.</p>
+  <p>El equipo ahora cuenta con <b>${team.players.length}</b> jugadores activos.</p>
 
   <div style="text-align:center;">
     <a class="btn" href="#">Ver listado completo</a>
@@ -185,27 +175,32 @@ export const newPlayerTemplate = (team, player, sport) =>
   );
 
 /* =========================================================
-   🔹 FUNCIÓN FINAL PARA ENVIAR CORREOS
+   🔹 ENVÍO FINAL — SMTP2GO
 ========================================================= */
 export const sendMail = async (to, subject, html) => {
-  const fromName = process.env.MAIL_FROM_NAME || "Egresado Leyendas ⚡";
-
-  const fromAddr =
-    process.env.MAIL_FROM_ADDR ||
-    "postmaster@sandbox8cfe38c3d1784e88927f33499ba77e08.mailgun.org";
-
   try {
-    const res = await mg.messages.create(DOMAIN, {
-      from: `${fromName} <${fromAddr}>`,
-      to,
-      subject,
-      html,
+    const res = await fetch("https://api.smtp2go.com/v3/email/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Smtp2go-Api-Key":
+          process.env.SMTP2GO_API_KEY ||
+          "api-191D60BF578441BF9E8AA6BAC01990A3",
+      },
+      body: JSON.stringify({
+        sender: process.env.MAIL_FROM_ADDR || "egresados@umariana.edu.co",
+        to: [to],
+        subject,
+        html_body: html,
+      }),
     });
 
-    console.log("📨 Correo enviado:", res.id);
-    return res;
+    const data = await res.json();
+
+    console.log("📧 SMTP2GO respuesta:", data);
+    return data;
   } catch (err) {
-    console.error("❌ Error enviando correo:", err.message);
+    console.error("❌ Error SMTP2GO:", err.message);
     throw err;
   }
 };
