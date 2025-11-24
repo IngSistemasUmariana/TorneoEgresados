@@ -141,6 +141,46 @@ export const Home: React.FC = () => {
 
     return () => ctx.revert();
   }, [showHero]);
+  // ===== AUTO FETCH API con reintentos =====
+useEffect(() => {
+  const URL = "https://torneoegresados.onrender.com/";
+
+  const fetchWithRetries = async () => {
+    let attempts = 0;
+
+    const tryFetch = async () => {
+      attempts++;
+
+      try {
+        const res = await fetch(URL, { cache: "no-store" });
+
+        if (res.ok) {
+          console.log("API cargada");
+          return true;
+        } else {
+          throw new Error("Respuesta no OK");
+        }
+      } catch (err) {
+        if (attempts < 3) {
+          console.warn(`Intento ${attempts} fallido. Reintentando en 45s...`);
+          setTimeout(tryFetch, 45000); // 45 segundos
+        } else {
+          console.error("La API no respondió después de 3 intentos.");
+        }
+      }
+    };
+
+    tryFetch();
+  };
+
+  // Llamado inmediato
+  fetchWithRetries();
+
+  // Intervalo normal cada 40 min
+  const interval = setInterval(fetchWithRetries, 40 * 60 * 1000);
+
+  return () => clearInterval(interval);
+}, []);
 
   // ===== HERO EFFECT =====
   useEffect(() => {
