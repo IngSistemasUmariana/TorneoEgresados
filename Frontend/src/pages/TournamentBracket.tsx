@@ -53,7 +53,7 @@ const TournamentBracket = () => {
 
   const fetchTournament = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/tournament/partidosfutsal");
+      const response = await fetch("https://torneoegresados.onrender.com/api/tournament/partidosfutsal");
       const data = await response.json();
 
       if (data.ok && Array.isArray(data.partidos)) {
@@ -189,7 +189,7 @@ const TournamentBracket = () => {
     try {
       setShowPanel(false);
 
-      const res = await fetch("http://localhost:4000/api/tournament/generarpartidosfutsal", {
+      const res = await fetch("https://torneoegresados.onrender.com/api/tournament/generarpartidosfutsal", {
         method: "POST",
       });
       const data = await res.json();
