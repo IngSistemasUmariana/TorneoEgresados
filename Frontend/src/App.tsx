@@ -7,7 +7,10 @@ import { Home } from "./pages/Home";
 import { Teams } from "./pages/Teams";
 import { Soporte } from "./pages/Soporte";
 import { Register } from "./pages/RegisterPage";
-import TournamentBracket from "./pages/TournamentBracket"; // componente nuevo del torneo
+import TournamentBracket from "./pages/TournamentBracket";
+
+import { AdminLivePanel } from "./pages/AdminLivePanel.tsx";
+import { UserLiveViewerBigScreen } from "./pages/UserLiveViewerBigScreen.tsx";
 
 function AppContent() {
   const { currentPage } = useNavigation();
@@ -31,14 +34,19 @@ export default function App() {
     <BrowserRouter>
       <NavigationProvider>
         <Routes>
-          {/* NAVEGACIÓN INTERNA */}
           <Route path="/" element={<AppContent />} />
 
-          {/* PÁGINAS ACCESIBLES SOLO POR URL */}
+          {/* INSCRIPCIÓN */}
           <Route path="/register" element={<Register />} />
 
-          {/* TORNEO POR URL DIRECTA */}
+          {/* TORNEO POR URL */}
           <Route path="/torneo" element={<TournamentBracket />} />
+
+          {/* ADMIN LIVE PANEL */}
+          <Route path="/adminlive" element={<AdminLivePanel />} />
+
+          {/* PANTALLA GIGANTE */}
+          <Route path="/live" element={<UserLiveViewerBigScreen />} />
         </Routes>
       </NavigationProvider>
     </BrowserRouter>

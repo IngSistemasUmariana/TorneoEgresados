@@ -12,7 +12,7 @@ import sportRoutes from "./routes/sport.routes.js";
 import teamRoutes from "./routes/team.routes.js";
 import matchRoutes from "./routes/match.routes.js";
 import tournamentRoutes from "./routes/tournament.routes.js";
-
+import pdfRoutes from "./routes/pdf.routes.js";
 export const app = express();
 
 // --------------------------
@@ -33,6 +33,7 @@ const swaggerDocument = JSON.parse(fs.readFileSync(swaggerDocPath, "utf-8"));
 
 app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+app.use("/api", pdfRoutes);
 // --------------------------
 // Rutas principales
 // --------------------------

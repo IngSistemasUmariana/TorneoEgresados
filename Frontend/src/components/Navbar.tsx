@@ -1,16 +1,29 @@
-import { Home, Users, MessageSquare, Trophy } from 'lucide-react';
+import { Home, Users, MessageSquare, Trophy, Radio } from 'lucide-react';
 import { useNavigation } from '../context/NavigationContext';
+import { useEffect, useState } from 'react';
 
 export const Navbar = () => {
   const { currentPage, navigateTo } = useNavigation();
+  const [isLive, setIsLive] = useState(false);
 
   const navItems = [
-    { id: 'home' as const, label: 'Inicio', icon: Home },
-    // { id: 'register' as const, label: 'Inscribirse', icon: ClipboardList },  // ❌ OCULTO
-    { id: 'teams' as const, label: 'Equipos', icon: Users },
-    { id: 'torneo' as const, label: 'Torneo', icon: Trophy },
-    { id: 'soporte' as const, label: 'Soporte', icon: MessageSquare },
+    { id: 'home', label: 'Inicio', icon: Home },
+    { id: 'teams', label: 'Equipos', icon: Users },
+    { id: 'torneo', label: 'Torneo', icon: Trophy },
+    { id: 'soporte', label: 'Soporte', icon: MessageSquare },
   ];
+
+  useEffect(() => {
+    const checkLive = () => {
+      const m = JSON.parse(localStorage.getItem("live_match"));
+      setIsLive(m && m.live === true);
+    };
+
+    checkLive();
+    window.addEventListener("storage", checkLive);
+
+    return () => window.removeEventListener("storage", checkLive);
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-lg z-50">
@@ -18,9 +31,11 @@ export const Navbar = () => {
         <div className="flex justify-between items-center h-16">
 
           {/* LOGO */}
-          <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigateTo('home')}>
+          <div className="flex items-center space-x-2 cursor-pointer"
+               onClick={() => navigateTo('home')}>
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center overflow-hidden">
-              <img src="./logo2.jpg" alt="Logo" className="object-cover w-full h-full rounded-lg" />
+              <img src="./logo2.jpg" alt="Logo"
+                   className="object-cover w-full h-full rounded-lg" />
             </div>
             <span className="text-xl font-bold text-gray-800">
               Egresados Leyendas
@@ -50,6 +65,19 @@ export const Navbar = () => {
                 </button>
               );
             })}
+
+            {/* 🔴 BOTÓN EN VIVO SOLO SI HAY PARTIDO */}
+            {isLive && (
+              <button
+                onClick={() => window.location.href = "/live"}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-600 text-white shadow-lg animate-pulse"
+              >
+                <Radio className="w-5 h-5" />
+                <span className="font-medium hidden sm:inline">
+                  EN VIVO
+                </span>
+              </button>
+            )}
           </div>
 
         </div>
