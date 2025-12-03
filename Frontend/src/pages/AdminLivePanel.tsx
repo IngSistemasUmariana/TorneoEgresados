@@ -23,7 +23,7 @@ export const AdminLivePanel = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const res = await fetch("https://torneoegresados.onrender.com/api/tournament/partidosfutsal");
+        const res = await fetch("http://localhost:4000/api/tournament/partidosfutsal");
         const data = await res.json();
         if (data.ok) setMatches(data.partidos || []);
       } catch (err) {
@@ -87,7 +87,7 @@ export const AdminLivePanel = () => {
   const updateScoreAPI = async () => {
     if (!selectedMatch) return;
     try {
-      await fetch(`"https://torneoegresados.onrender.com/api/matches/${selectedMatch.id}/score`, {
+      await fetch(`http://localhost:4000/api/matches/${selectedMatch.id}/score`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ score1, score2 }),
