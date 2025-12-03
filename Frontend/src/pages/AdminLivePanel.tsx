@@ -23,7 +23,7 @@ export const AdminLivePanel = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        const res = await fetch("https://torneoegresados.onrender.com//api/tournament/partidosfutsal");
+        const res = await fetch("https://torneoegresados.onrender.com/api/tournament/partidosfutsal");
         const data = await res.json();
         if (data.ok) setMatches(data.partidos || []);
       } catch (err) {
